@@ -13,7 +13,7 @@ const authRoutes = require('./routes/auth');
 const journalRoutes = require('./routes/journal');
 const analyticsRoutes = require('./routes/analytics');
 const userRoutes = require('./routes/user');
-const auth = require('./middleware/auth');
+const { auth } = require('./middleware/auth');
 
 const app = express();
 const server = createServer(app);

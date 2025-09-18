@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import io from 'socket.io-client';
 
@@ -17,19 +17,7 @@ export const SocketProvider = ({ children }) => {
   const [connected, setConnected] = useState(false);
   const { isAuthenticated, getAccessTokenSilently } = useAuth0();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      initializeSocket();
-    }
-
-    return () => {
-      if (socket) {
-        socket.disconnect();
-      }
-    };
-  }, [isAuthenticated]);
-
-  const initializeSocket = async () => {
+  const initializeSocket = useCallback(async () => {
     try {
       const token = await getAccessTokenSilently();
       
@@ -59,7 +47,19 @@ export const SocketProvider = ({ children }) => {
     } catch (error) {
       console.error('Error initializing socket:', error);
     }
-  };
+  }, [getAccessTokenSilently]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      initializeSocket();
+    }
+
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
+  }, [isAuthenticated, initializeSocket, socket]);
 
   const joinSession = (sessionId) => {
     if (socket && connected) {

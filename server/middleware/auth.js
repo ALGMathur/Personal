@@ -1,4 +1,4 @@
-const jwt = require('express-jwt');
+const { expressjwt: jwt } = require('express-jwt');
 const jwks = require('jwks-rsa');
 const User = require('../models/User');
 
@@ -8,10 +8,10 @@ const jwtCheck = jwt({
     cache: true,
     rateLimit: true,
     jwksRequestsPerMinute: 5,
-    jwksUri: `https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`
+    jwksUri: `https://${process.env.AUTH0_DOMAIN || 'your-domain.auth0.com'}/.well-known/jwks.json`
   }),
-  audience: process.env.AUTH0_AUDIENCE,
-  issuer: `https://${process.env.AUTH0_DOMAIN}/`,
+  audience: process.env.AUTH0_AUDIENCE || 'your-api-identifier',
+  issuer: `https://${process.env.AUTH0_DOMAIN || 'your-domain.auth0.com'}/`,
   algorithms: ['RS256']
 });
 
@@ -28,7 +28,13 @@ const auth = async (req, res, next) => {
       }
 
       try {
-        const auth0Id = req.user.sub;
+        const auth0Id = req.auth?.sub || req.user?.sub;
+        
+        if (!auth0Id) {
+          return res.status(401).json({ 
+            message: 'No user ID found in token' 
+          });
+        }
         
         // Find or create user
         let user = await User.findOne({ auth0Id });
@@ -37,8 +43,8 @@ const auth = async (req, res, next) => {
           // Create new user with privacy-conscious defaults
           user = new User({
             auth0Id,
-            email: req.user.email || 'anonymous@privacy.local',
-            displayName: req.user.name || 'Anonymous User',
+            email: req.auth?.email || req.user?.email || 'anonymous@privacy.local',
+            displayName: req.auth?.name || req.user?.name || 'Anonymous User',
             consentVersion: '1.0',
             consentDate: new Date(),
             privacySettings: {

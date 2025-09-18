@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
@@ -27,7 +27,37 @@ function App() {
   const [needsConsent, setNeedsConsent] = useState(false);
   const { theme, colorTheme } = useColorTheme();
 
-  // Create Material-UI theme based on color psychology
+  const fetchUserProfile = useCallback(async () => {
+    try {
+      const token = await getAccessTokenSilently();
+      const response = await fetch('/api/auth/profile', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 403) {
+        const data = await response.json();
+        if (data.requiresConsent) {
+          setNeedsConsent(true);
+          return;
+        }
+      }
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  }, [getAccessTokenSilently]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUserProfile();
+    }
+  }, [isAuthenticated, fetchUserProfile]);
   const muiTheme = createTheme({
     palette: {
       mode: 'light',
@@ -94,38 +124,6 @@ function App() {
       },
     },
   });
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchUserProfile();
-    }
-  }, [isAuthenticated]);
-
-  const fetchUserProfile = async () => {
-    try {
-      const token = await getAccessTokenSilently();
-      const response = await fetch('/api/auth/profile', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.status === 403) {
-        const data = await response.json();
-        if (data.requiresConsent) {
-          setNeedsConsent(true);
-          return;
-        }
-      }
-
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-      }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-    }
-  };
 
   const handleConsentComplete = (userData) => {
     setUser(userData);
