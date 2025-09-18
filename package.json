@@ -1,0 +1,36 @@
+{
+  "name": "campus-mental-health-platform",
+  "version": "1.0.0",
+  "description": "A mobile-first MERN stack platform for campus mental health interventions",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "test": "cd server && npm test && cd ../client && npm test",
+    "install-server": "cd server && npm install",
+    "install-client": "cd client && npm install",
+    "install-all": "npm run install-server && npm run install-client",
+    "start": "cd server && npm start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ALGMathur/Personal.git"
+  },
+  "keywords": [
+    "mental-health",
+    "mern-stack",
+    "campus",
+    "mobile-first",
+    "auth0",
+    "mongodb",
+    "react",
+    "nodejs"
+  ],
+  "author": "ALGMathur",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
